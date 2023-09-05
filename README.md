@@ -6,3 +6,6 @@ Press "enter" to place a red block at the present dynamic block location.
 Press "c" to clear red blocks. 
 Press 'q' and 'e' to scroll slower and faster respectively.
 Press 'esc' to quit
+
+Press 'y' to place a blue block which the dynamic block collides with.
+Press 'u' to clear all blue blocks.
