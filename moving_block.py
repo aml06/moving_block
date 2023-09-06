@@ -23,62 +23,70 @@ def __main__():
     rect.multiplier = 50
     blockList = []
     collideList = []
+    overlapList = []
     y_no_repeat = True
     while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
+                
             if event.type == pygame.VIDEORESIZE:
                 new_width, new_height = event.size
                 WIDTH, HEIGHT = new_width, new_height
                 window = pygame.display.set_mode((WIDTH, HEIGHT), pygame.RESIZABLE)
                 pygame.display.update()
+                
             if event.type == pygame.KEYDOWN:
-                #move using awsd
-                if event.key == pygame.K_s:
-                    print("'S' key is pressed")
-                    #dynamic block cannot be in same coordinates as a collision block
+        
+                #move using awsd or arrow keys
+                if event.key == pygame.K_s or event.key == pygame.K_DOWN:
+                    print("Moving Down")
                     collision = False
                     for i in collideList:
                         if rect.colliderect(i):
                             collision = True
                             if checkDown(rect, i):
                                 collision == False
+                                rect.moveDown()
                             print("Avoiding Collision!")
                     if collision == False:
                         rect.moveDown()
-                if event.key == pygame.K_w:
-                    print("'W' key is pressed")
-                    #dynamic block cannot be in same coordinates as a collision block
+                        
+                if event.key == pygame.K_w or event.key == pygame.K_UP:
+                    print("Moving Up")
+                    
                     collision = False
                     for i in collideList:
                         if rect.colliderect(i):
                             collision = True
                             if checkUp(rect, i):
                                 collision = False
+                                rect.moveUp()
                             print("Avoiding Collision!")
                     if collision == False:
                         rect.moveUp()
-                if event.key == pygame.K_a:
-                    print("'A' key is pressed")
-                    #dynamic block cannot be in same coordinates as a collision block
+                        
+                if event.key == pygame.K_a or event.key == pygame.K_LEFT:
+                    print("Going Left")
+                    
                     collision = False
                     for i in collideList:
                         if rect.colliderect(i):
                             collision = True
                             if checkLeft(rect,i):
                                 collision = False
+                                rect.moveLeft()
                             print("Avoiding Collision!")
                     if collision == False:
                         rect.moveLeft()
-                if event.key == pygame.K_d:
-                    print("'D' key is pressed")
-                    #dynamic block cannot be in same coordinates as a collision block
+                if event.key == pygame.K_d or event.key == pygame.K_RIGHT:
+                    print("Going Right")
                     collision = False
                     for i in collideList:
                         if rect.colliderect(i):
                             collision = True
                             if checkRight(rect,i):
+                                rect.moveRight()
                                 collision = False
                             print("Avoiding Collision!")
                     if collision == False:
@@ -88,56 +96,7 @@ def __main__():
                 if event.key == pygame.K_ESCAPE:
                     print("'Esc' key is pressed")
                     running = False
-                    
-                #arrow keys also work to move
-                if event.key == pygame.K_DOWN:
-                    print("'Down Arrow' key is pressed")
-                    collision = False
-                    for i in collideList:
-                        if rect.colliderect(i):
-                            collision = True
-                            if checkDown(rect,i):
-                                collision = False
-                            print("Avoiding Collision!")
-                    if collision == False:
-                        rect.moveDown()
                 
-                if event.key == pygame.K_UP:
-                    print("'UP Arrow' key is pressed")
-                    collision = False
-                    for i in collideList:
-                        if rect.colliderect(i):
-                            collision = True
-                            if checkUp(rect, i):
-                                collision = False
-                            print("Avoiding Collision!")
-                    if collision == False:
-                        rect.moveUp()
-
-                if event.key == pygame.K_LEFT:
-                    print("'Left Arrow' key is pressed")
-                    collision = False
-                    for i in collideList:
-                        if rect.colliderect(i):
-                            collision = True
-                            if checkLeft(rect,i):
-                                collision = False
-                            print("Avoiding Collision!")
-                    if collision == False:
-                        rect.moveLeft()
-
-                if event.key == pygame.K_RIGHT:
-                    print("'Right Arrow' key is pressed")
-                    collision = False
-                    for i in collideList:
-                        if rect.colliderect(i):
-                            collision = True
-                            if checkRight(rect,i):
-                                collision = False
-                            print("Avoiding Collision!")
-                    if collision == False:
-                        rect.moveRight()
-                    
                 #generate red square when we hit enter at the present controllable rectangle location
                 if event.key == pygame.K_RETURN:
                     print("'Enter' key is pressed")
@@ -152,20 +111,9 @@ def __main__():
                 if event.key == pygame.K_y:
                     if y_no_repeat:
                         print("'Y' key is pressed")
-                        
                         block = Rectangle(rect.position()[0], rect.position()[1], 50, 50, BLUE)
-                        collideList.append(block)
-                        '''
-                        if rect.position()[0] > WIDTH // 2:
-                            rect.changePosition(rect.position()[0]-20, rect.position()[1])
-                        else:
-                            rect.changePosition(rect.position()[0]+20, rect.position()[1])
-                            
-                        if rect.position()[1] > HEIGHT // 2:
-                            rect.changePosition(rect.position()[0], rect.position()[1] - 20)
-                        else:
-                            rect.changePosition(rect.position()[0], rect.position()[1] + 20)
-                        '''
+                        # put solid blocks in temp list and once dynamic is clear, add to collision list
+                        overlapList.append(block)
                         y_no_repeat = False
                     else:
                         print("Prevented repeat 'Y'")
@@ -188,13 +136,11 @@ def __main__():
                     print(f"Collision List: {collideList}")
                     print(f"Block List: {blockList}")
                     
-            #Making a static block the dynamic block will collide with / be unable to pass through
+            # Key repeat suppression was an issue for 'y' key, so new method here, only switch conditional after keyup
             if event.type == pygame.KEYUP:
                 if event.key == pygame.K_y:
                     print("'Y' key is released")
                     y_no_repeat = True
-                    \
-                
         
         #So controllable rectangle stays inside screen, will now warp to other side when edge is hit, works with resize
         if rect.position()[0] < 0:
@@ -206,6 +152,12 @@ def __main__():
         if rect.position()[1] > HEIGHT:
             rect.changePosition(rect.position()[0],0)
         
+        # check if dynamic is clear of temp colidable blocks, then move to collision list
+        for temp_block in overlapList:
+            if rect.colliderect(temp_block) == False:
+                collideList.append(temp_block)
+                overlapList.remove(temp_block)
+        
         #render on screen
         window.fill(BLACK)
         rect.draw(window)
@@ -213,6 +165,8 @@ def __main__():
             block.draw(window)
         for brick in collideList:
             brick.draw(window)
+        for rectangl in overlapList:
+            rectangl.draw(window)
         pygame.display.update()
     
     #exit while loop, program stops
@@ -256,13 +210,13 @@ class Rectangle(pygame.Rect):
         self.y = y
     
 def checkDown(rect1, rect2):
-    if rect1.position()[1] >= rect2.position()[1]:
+    if rect1.position()[1] <= rect2.position()[1]:
         return False
     else:
         return True
 
 def checkUp(rect1, rect2):
-    if rect1.position()[1] < rect2.position()[1]:
+    if rect1.position()[1] > rect2.position()[1]:
         return False
     else:
         return True
